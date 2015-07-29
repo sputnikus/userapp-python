@@ -20,10 +20,13 @@ class IterableObject(object):
         object.__setattr__(self, 'source', source)
 
     def __iter__(self):
-        return self.source.items()
+        if sys.version_info[0] < 3:
+            return self.source.items()
+        else:
+            return iter(self.source.items())
 
     def __getattr__(self, key):
-        if not key in self.source:
+        if key not in self.source:
             raise AttributeError("Object has not attribute '{k}'".format(k=key))
 
         return self.source[key]
@@ -31,7 +34,7 @@ class IterableObject(object):
     def __setattr__(self, key, value):
         if isinstance(value, dict) or isinstance(value, list):
             value=DictionaryUtility.to_object(value)
-        
+
         self.source[key]=value
 
     def __getitem__(self, key):
@@ -42,7 +45,7 @@ class IterableObject(object):
 
     def __contains__(self, key):
         return key in self.source
-    
+
     def __repr__(self):
         return str(self)
 
@@ -64,7 +67,7 @@ class DictionaryUtility:
         """
         Convert a dictionary to an object (recursive).
         """
-        def convert(item): 
+        def convert(item):
             if isinstance(item, dict):
                 return IterableObject({k: convert(v) for k, v in item.items()})
             if isinstance(item, list):
